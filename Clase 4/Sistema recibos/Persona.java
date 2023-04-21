@@ -22,22 +22,18 @@ public class Persona {
         this.nombre = nombre;
     }
     
-    public void setPersona(Recibo luz, Recibo tel, Recibo agua, String nombre){
-        this.luz = luz;
-        this.tel = tel;
-        this.agua = agua;
-        this.nombre = nombre;
-    }
-    
     public Recibo getRecibo(String tipo){
-        if(tipo.toUpperCase() == "LUZ")
-            return this.luz;
-        else if(tipo.toUpperCase() == "TELEFONO")
-            return this.tel;
-        else if(tipo.toUpperCase() == "AGUA")
-            return this.agua;
-        else
-            return null;
+        String t = tipo.toUpperCase();
+        switch (t) {
+            case "LUZ":
+                return this.luz;
+            case "TELEFONO":
+                return this.tel;
+            case "AGUA":
+                return this.agua;
+            default:
+                return null;
+        }
     }
     public String getNombre(){
         return this.nombre;
