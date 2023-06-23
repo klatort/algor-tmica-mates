@@ -1,6 +1,7 @@
 import pygame
 import random
 import math
+import pickle
 from bullet import Bullet
 from player import Player
 from invader import Invader
@@ -20,11 +21,17 @@ class GameManager():
         self.score_val = 0
         self.game_over = False
         self.bullet_sprite = None
+        self.invader_sprite = None
+        self.player_sprite = None
         self.clock = None
+        self.key_buffer = []
 
     def on_init(self):
         self.player = Player()
         self.bullet_sprite = pygame.image.load('data/bullet.png')
+        self.invader_sprite = pygame.image.load('data/alien.png')
+        self.player_sprite = pygame.image.load('data/spaceship.png')
+
         pygame.init() 
 
         self.clock = pygame.time.Clock()
@@ -34,9 +41,10 @@ class GameManager():
         self.font = pygame.font.Font('freesansbold.ttf', 20)
         self.game_over_font = pygame.font.Font('freesansbold.ttf', 64)
 
-        for i in range(8):
-            self.invaders.append(Invader(random.randint(64, 737),random.randint(30, 180),pygame.image.load('data/alien.png')))
-        
+        fEnemigos = open("enemigos.dat","rb")
+        self.invaders = pickle.load(fEnemigos)    
+        fEnemigos.close()
+
         pygame.display.set_caption("Welcome to Space Invaders Game by:- styles")
 
         mixer.music.load('data/background.wav')
@@ -46,12 +54,13 @@ class GameManager():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
-    
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
-                    self.player.dx = -1.7
+                    if self.key_buffer.count(pygame.K_LEFT) == 0:
+                        self.key_buffer.append(pygame.K_LEFT)
                 if event.key == pygame.K_RIGHT:
-                    self.player.dx = 1.7
+                    if self.key_buffer.count(pygame.K_RIGHT) == 0:
+                        self.key_buffer.append(pygame.K_RIGHT)
                 if event.key == pygame.K_SPACE:
                     
                     self.bullets.append(Bullet(self.player.x, self.bullet_sprite))
@@ -59,11 +68,18 @@ class GameManager():
                     bullet_sound = mixer.Sound('data/bullet.wav')
                     bullet_sound.play()
             if event.type == pygame.KEYUP:
-                if event.key != pygame.K_SPACE:
-                    self.player.dx = 0
+                if event.key == pygame.K_LEFT:
+                    self.key_buffer.remove(pygame.K_LEFT)
+                if event.key == pygame.K_RIGHT:
+                    self.key_buffer.remove(pygame.K_RIGHT)
 
     def on_loop(self):  
-        self.player.x += self.player.dx 
+        for key in self.key_buffer:
+            if key == pygame.K_LEFT:
+                self.player.x -= 1
+            if key == pygame.K_RIGHT:
+                self.player.x += 1
+            
         for invader in self.invaders:
             invader.x += invader.dx 
 
@@ -108,12 +124,12 @@ class GameManager():
         self.screen.fill((0, 0, 0))
 
         for bullet in self.bullets:
-            self.screen.blit(bullet.sprite, (bullet.x, bullet.y))
+            self.screen.blit(self.bullet_sprite, (bullet.x, bullet.y))
 
         for invader in self.invaders:    
-            self.screen.blit(invader.sprite, (invader.x,invader.y))
+            self.screen.blit(self.invader_sprite, (invader.x,invader.y))
         score = self.font.render("Points: " + str(self.score_val), True, (255,255,255))
-        self.screen.blit(self.player.sprite, (self.player.x - 16, self.player.y - 20))
+        self.screen.blit(self.player_sprite, (self.player.x - 16, self.player.y - 20))
         self.screen.blit(score, (5 , 5))
         if(self.game_over):
             game_over_text = self.game_over_font.render("GAME OVER", True, (255,255,255))
